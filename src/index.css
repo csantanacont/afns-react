@@ -1,0 +1,116 @@
+/* .Home {
+  width: 500px;
+  height: 500px;
+  margin: 100px auto 0px auto;
+
+}
+
+.Home button{
+  margin: 0px 30px 0px 100px;
+} */
+/* #btnCrearAFN{
+  margin: 10px 0 0 50%;
+/* } */
+
+.botonesInicio { 
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 40px;
+}
+
+#btnVerAFNs{
+  margin-left: 5px;
+}
+#btnCancelarAFN{
+  margin-left: 5px;
+}
+.inicio{
+  margin-top: 10%;
+}
+.estadoDiv{
+  display: flex;
+  flex: 1 0 33%;
+  flex-direction: column;
+  width: 300px;
+  height: 200px;
+  border: solid 4px;
+  margin: 5px 0px 0px 5px;
+  padding: 15px;
+}
+
+.icon{
+  width: 25px;
+  height: 25px;
+  margin: 0 12px 2px 4px;
+}
+.crearAFNDiv{
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+  /* align-items: stretch; */
+}
+.estadosBoxDiv{
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: stretch;
+
+}
+
+#inputCantidades{
+  width: 90px;
+  font-size: large;
+  font-weight: 700;
+  border: 1px solid black;
+  text-align: center;
+  margin: 0 0 10px 10px;
+}
+.inputNumEstados{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 40px;
+}
+#btnAgregarEstados { 
+  margin: 0 0 10px 10px;
+}
+h1, h6{
+  text-align: center;
+}
+
+.lista{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+#selectAFN{ 
+  width: 300px;
+}
+
+#watchIcon{ 
+  margin-top: 10px;
+  margin-left: 15px;
+}
+
+.test{
+  /* width: 300px; */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+#inputTest{
+  width: 300px;
+  margin-left: 10px;
+}
+
+.tabla{
+  margin-left: 20px;
+  margin-right: 20px;
+}
