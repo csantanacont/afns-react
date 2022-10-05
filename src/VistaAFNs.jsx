@@ -8,10 +8,6 @@ export const VistaAFNs = ({automatas, idx}) => {
 
   let afn = automatas[idx];
   let estadosDestino = [];
-
-  useEffect(() => {
-    console.log(afn)
-  }, [])
   
   return (
     <>
@@ -40,9 +36,6 @@ export const VistaAFNs = ({automatas, idx}) => {
                       t.alfabeto.includes(a) && estadosDestino.push(t.estadoDestino)
                     })
                     return(<td>{
-                      // estadosDestino.map( e => (
-                      //   String(e).concat(" ")
-                      //   ))
                       JSON.stringify(estadosDestino)
                       }</td>)
                     
