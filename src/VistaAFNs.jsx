@@ -34,7 +34,8 @@ export const VistaAFNs = ({automatas, idx}) => {
                 }
                 
                 {
-                  afn.alfabeto.map( a => {                  
+                  afn.alfabeto.map( a => {    
+                    estadosDestino = [];              
                     e.transiciones.map( t => {
                       t.alfabeto.includes(a) && estadosDestino.push(t.estadoDestino)
                     })
@@ -48,7 +49,7 @@ export const VistaAFNs = ({automatas, idx}) => {
                   } )
                 }
                 {
-                  estadosDestino.includes(e.id) ? <td ><FcCheckmark></FcCheckmark></td> : <td ><GrClose></GrClose></td>
+                  afn.estadosAceptacion.includes(e.id) ? <td ><FcCheckmark></FcCheckmark></td> : <td ><GrClose></GrClose></td>
                 }
               </tr>
             )
