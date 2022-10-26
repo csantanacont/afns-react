@@ -6,18 +6,25 @@ import { Button, Form } from 'react-bootstrap'
 import { VistaAFNs } from "./VistaAFNs";
 import { render } from "react-dom";
 import Swal from 'sweetalert2'
+import { AFNTxt } from "../AFNTxt";
 
 
 export const Home = () => {
   
   const [afns, setAfns] = useState([])
   const [crearAFNRender, setCrearAFNRender] = useState(false);
+  const [crearAFNTXTRender, setCrearAFNTXTRender] = useState(false);
   const [verAFNsRender, setVerAFnsRender] = useState(false)
   const [mostrarTabla, setMostrarTabla] = useState(false);
   const [afnSeleccionado, setAfnSeleccionado] = useState(-1);
+  const [secuencia, setSecuencia] = useState("");
+  const [me, setMe] = useState(false);
+
+  let manejoErrores = [];
 
   useEffect(() => {
     ocultarAFNRender();
+    ocultarAFNRenderTXT();
   }, [afns])
   
   const setAFN = (nombre, estados, inicial, final, transiciones) => {
@@ -41,6 +48,10 @@ export const Home = () => {
   const ocultarAFNRender = () =>{
     setCrearAFNRender(false);
   }
+
+  const ocultarAFNRenderTXT = () =>{
+    setCrearAFNTXTRender(false);
+  }
   const mostrarTablaAFNHandler = () => {
     let {value} = document.getElementById("selectAFN")
     if(value < 999999 )
@@ -60,58 +71,103 @@ export const Home = () => {
   }
 
   const probarCadena = () => {
+    manejoErrores = [];
     let {value:cadena} = document.getElementById("inputTest");
     let {value:idx} = document.getElementById("selectAFN");
     let automata = afns[idx];
     let estadosSiguientes = [automata.estadoInicial];
-
-    for(let i=0; i<cadena.length;i++){
-        estadosSiguientes = generaSecuenciaEstados(cadena[i], estadosSiguientes, automata);
-    }
-
-    if(estadosSiguientes.length === 0){
-      alerta("Cadena rechazada", "La cadena no es aceptada por el automata.", 'error');
-    }else{
-      let seAceptoLaCadena = false;
-      estadosSiguientes.map(eIdx => {
-        if(automata.estadosAceptacion.includes(eIdx)){
-          seAceptoLaCadena = true;
+    let estadosAuxiliares = [...estadosSiguientes];
+    for(let i=0;i<cadena.length;i++){
+        console.log("EVALUANDO EL SIMBOLO: ", cadena[i])
+        if(automata.alfabeto.includes(cadena[i])){
+          estadosAuxiliares = generaSecuenciaEstados(cadena[i], i, estadosAuxiliares, automata)
+          if(estadosAuxiliares.length > 0){
+            estadosSiguientes = [...estadosAuxiliares]
+          }
         }
-      })
-      if(seAceptoLaCadena){
-        alerta("Cadena aceptada", "La cadena es aceptada por el automata.", 'success');    
-      }else{
-        alerta("Cadena rechazada", "La cadena no es aceptada por el automata.", 'error')
-      }
+        else{
+          let error = {
+            simbolo:cadena[i],
+            posicion: i,
+            mensaje: "El simbolo evaluado no pertenece al alfabeto definido en el AFN",
+            estado: estadosSiguientes.at(0)
+          };
+          console.error("Consulta los errores");
+          manejoErrores.push(error);
+        }
+      
     }
+    if(manejoErrores.length > 0){
+      setMe(true);
+      alerta("Cadena rechazada", "Presiona mostrar errores para mas detalles", "error");
+    }
+    else{
+      setMe(false)
+      let cadenaAceptada = false;
+      automata.estadosAceptacion.map(e => {
+        estadosSiguientes.includes(e) ? cadenaAceptada = true : null;
+      })
+      
+      cadenaAceptada ? alerta("Cadena aceptada", "La cadena ingresada pertenece al automata", "success") : alerta("Cadena no aceptada", "La cadena ingresada no pertenece al automata", "info");
+    }
+    
   }
   
 
 
-  const generaSecuenciaEstados = (simbolo, estadosActuales, automata) => {
+  const generaSecuenciaEstados = (simbolo, idxSimbolo, estados, automata) => {
     let secuenciaEstados = [];
-    estadosActuales.map( idx => {
-      automata.estados[idx].transiciones.map( t => {
-        t.alfabeto.includes(simbolo) ? secuenciaEstados.push(t.estadoDestino) : null
+    estados.map(estadoActual => {
+      automata.estados[estadoActual].transiciones.map( t => {
+        t.alfabeto.includes(simbolo) 
+        ? secuenciaEstados.push(t.estadoDestino) && console.log("q"+estadoActual+"("+simbolo+")->",t.estadoDestino) : null;
       })
+      
     })
-
+    
+    if(secuenciaEstados.length === 0){
+      let i = estados.length -1;
+      let error = {
+        simbolo:simbolo,
+        posicion: idxSimbolo,
+        mensaje: "El simbolo evaluado no tiene una transicion hacia un estado valido",
+        estado: estados.at(-1)
+      };
+      console.error("Consulta los errores");
+      manejoErrores.push(error);
+    }
+    
     return secuenciaEstados;
   }
   const mostrarOcultarListaAFNRender = ()=>{
     setVerAFnsRender(!verAFNsRender)
     setMostrarTabla(false)
   }
+
+  const mostrarCrearAFNTxt = () =>{
+    setCrearAFNTXTRender(true);
+    setMostrarTabla(false);
+    setVerAFnsRender(false);
+  }
+  const verErrores = () => {
+    console.table(manejoErrores);
+  }
   return (
     <main className="Home">
       {
-        !crearAFNRender && <div className="inicio">
+        !crearAFNRender && !crearAFNTXTRender && <div className="inicio">
           <h1> AUTOMATAS FINITOS DETERMINISTAS </h1>
           <div className="botonesInicio">
             <Button
             onClick={mostrarAFNRender}
             size='lg'
             > Crear AFN </Button>
+            <Button
+            onClick={mostrarCrearAFNTxt}
+            size="lg"
+            >
+              Crear AFN desde texto
+            </Button>
             {
               afns.length > 0 && 
               (<Button
@@ -123,6 +179,9 @@ export const Home = () => {
           </div>
         
         </div>
+      }
+      {
+        crearAFNTXTRender && <AFNTxt ocultarAFNRenderTXT= {ocultarAFNRenderTXT} enviarAFN = {recibirAFN}/>
       }
       {
         crearAFNRender && <AFN ocultarAFNRender = {ocultarAFNRender} enviarAFN = {recibirAFN}/>
@@ -153,6 +212,7 @@ export const Home = () => {
             Ingresa una cadena para probar el automata
             <Form.Control id="inputTest" size="sm" ></Form.Control>  
             <Button onClick={probarCadena}> PROBAR </Button>
+            {me && <Button onClick={verErrores} variant="danger"> Mostrar errores </Button>}
           
           </div>
             <div><VistaAFNs automatas={afns} idx={afnSeleccionado}/></div>

@@ -11,10 +11,13 @@ export class EstadoAFN{
      /* Verifica que la transicion que se intenta agregar, no se encuentre en las transiciones actuales
       antes de agregarla.*/
     agregarTransicion(transicion){
-        let transicionEncontrada = this.transiciones.find( tran =>{
-            return JSON.stringify(transicion.alfabeto) === JSON.stringify(tran.alfabeto) && transicion.estadoDestino.id == tran.estadoDestino.id;
-        })
-        !transicionEncontrada && this.transiciones.push(transicion);
+        // let transicionEncontrada = this.transiciones.find( tran =>{
+        //     let status = JSON.stringify(transicion.alfabeto) === JSON.stringify(tran.alfabeto) && transicion.estadoDestino.id === tran.estadoDestino.id;
+        //     status ? console.log("SE REPITE LA TRANSICION ", transicion, "CON ", tran) : console.log(transicion, "es valida")
+        //     return status;
+        // })
+        // !transicionEncontrada &&
+        this.transiciones.push(transicion);
     }
 }
 

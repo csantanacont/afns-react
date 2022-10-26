@@ -114,3 +114,9 @@ h1, h6{
   margin-left: 20px;
   margin-right: 20px;
 }
+
+
+#fila1, #fila2, #fila3, #fila4{
+  margin: auto auto;
+  width: 50%;
+}
