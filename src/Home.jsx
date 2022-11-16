@@ -21,7 +21,6 @@ export const Home = () => {
   const [me, setMe] = useState(false);
 
   let manejoErrores = [];
-
   useEffect(() => {
     ocultarAFNRender();
     ocultarAFNRenderTXT();
@@ -69,76 +68,155 @@ export const Home = () => {
       `${tipoMensaje}`
     )
   }
+  const cerraduraEpsilon = (estado, automata) => {
+    console.log("Calculando transiciones epsilon de ", estado)
+    let conjuntoEstadosEpsilon = [];
+    let pilaEstadosPendientes = [];
+    if(typeof(estado) == "number"){
+      pilaEstadosPendientes.push(estado);
+    }
+    if(typeof(estado) == "object"){
+      pilaEstadosPendientes = [...estado];
+    }
+    
+    let v;
+    let estadosTemporales = [];
+    while(pilaEstadosPendientes.length !== 0){
+      v = pilaEstadosPendientes.shift();
+      estadosTemporales = [];
+      conjuntoEstadosEpsilon.push(v);
+      automata.estados[v].transiciones.forEach(t => {
+        if(t.alfabeto.includes("E"))
+          if(!conjuntoEstadosEpsilon.includes(t.estadoDestino)){
+            pilaEstadosPendientes.push(t.estadoDestino);        
+            estadosTemporales.push(t.estadoDestino);
+          }
+            
+      });
+      if(estadosTemporales.length >0)
+        console.log("q"+v+"(E)--->{"+estadosTemporales+"}")  
+      // else
+        // console.log("q"+v+"(E)---> {}")
+    }
+    conjuntoEstadosEpsilon = conjuntoEstadosEpsilon.sort(function(a, b){return a-b});
+    return conjuntoEstadosEpsilon;
+    
+  }
+
+  const mover = (estado, simbolo, automata ) =>{
+    let conjuntoDestino = [];
+    if(typeof(estado) == "number"){
+      conjuntoDestino = automata.estados[estado].transiciones.map(t =>{
+        if(t.alfabeto.includes(simbolo)){
+          console.log("q"+estado+"("+simbolo+")->{"+ t.estadoDestino+"}")
+          return t.estadoDestino;
+        } 
+      })
+    }
+    if(typeof(estado) == "object"){
+      estado.map(e => {
+        automata.estados[e].transiciones.map(t =>{
+          if(t.alfabeto.includes(simbolo)){
+            console.log("q"+e+"("+simbolo+")->{"+ t.estadoDestino+"}")
+              conjuntoDestino.push(t.estadoDestino);
+          } 
+          else{
+            // console.log("q"+e+"("+simbolo+")->{}")
+          }
+        })
+      })
+    }
+    console.log("De los estados, los que tienen transicion con "+simbolo+" son ", conjuntoDestino)
+    return conjuntoDestino;
+    // console.log("El conjunto destino de ", estado, "con ",simbolo, "es ", conjuntoDestino )
+  }
+
+  const IrA = (estados, simbolo, automata) =>{
+    let conjuntoResultante = [];
+    let moverConjunto = mover(estados, simbolo, automata);
+    conjuntoResultante = cerraduraEpsilon(moverConjunto, automata);
+
+    return conjuntoResultante;
+  }
+
 
   const probarCadena = () => {
     manejoErrores = [];
+    let esAceptacion = false;
     let {value:cadena} = document.getElementById("inputTest");
     let {value:idx} = document.getElementById("selectAFN");
     let automata = afns[idx];
-    let estadosSiguientes = [automata.estadoInicial];
-    let estadosAuxiliares = [...estadosSiguientes];
-    for(let i=0;i<cadena.length;i++){
-        console.log("EVALUANDO EL SIMBOLO: ", cadena[i])
-        if(automata.alfabeto.includes(cadena[i])){
-          estadosAuxiliares = generaSecuenciaEstados(cadena[i], i, estadosAuxiliares, automata)
-          if(estadosAuxiliares.length > 0){
-            estadosSiguientes = [...estadosAuxiliares]
-          }
-        }
-        else{
-          let error = {
-            simbolo:cadena[i],
-            posicion: i,
-            mensaje: "El simbolo evaluado no pertenece al alfabeto definido en el AFN",
-            estado: estadosSiguientes.at(0)
-          };
-          console.error("Consulta los errores");
-          manejoErrores.push(error);
-        }
+    let conjuntoA = [];
+    conjuntoA = cerraduraEpsilon(automata.estadoInicial, automata);
+    console.log("Se inicia desde el conjunto  de estados EPSILON: ", conjuntoA);
+
+    for(let i = 0; i<cadena.length; i++){
+      let caracter = cadena[i];
+      console.log("Analizando el caracter "+caracter)
+      conjuntoA = IrA(conjuntoA, caracter, automata);
+      console.log(conjuntoA)
       
     }
-    if(manejoErrores.length > 0){
-      setMe(true);
-      alerta("Cadena rechazada", "Presiona mostrar errores para mas detalles", "error");
-    }
-    else{
-      setMe(false)
-      let cadenaAceptada = false;
-      automata.estadosAceptacion.map(e => {
-        estadosSiguientes.includes(e) ? cadenaAceptada = true : null;
-      })
-      
-      cadenaAceptada ? alerta("Cadena aceptada", "La cadena ingresada pertenece al automata", "success") : alerta("Cadena no aceptada", "La cadena ingresada no pertenece al automata", "info");
-    }
-    
+
+    esAceptacion = compruebaEstadosAceptacion(conjuntoA, automata);
+
+    esAceptacion ? console.log("CADENA ACEPTADA") : console.log("CADENA RECHAZADA")
   }
   
-
-
-  const generaSecuenciaEstados = (simbolo, idxSimbolo, estados, automata) => {
-    let secuenciaEstados = [];
-    estados.map(estadoActual => {
-      automata.estados[estadoActual].transiciones.map( t => {
-        t.alfabeto.includes(simbolo) 
-        ? secuenciaEstados.push(t.estadoDestino) && console.log("q"+estadoActual+"("+simbolo+")->",t.estadoDestino) : null;
-      })
-      
+  const compruebaEstadosAceptacion = (estados, automata) =>{
+    let aceptada = false;
+    estados.map(e =>{
+      automata.estadosAceptacion.includes(e)? aceptada = true : null;
     })
-    
-    if(secuenciaEstados.length === 0){
-      let i = estados.length -1;
-      let error = {
-        simbolo:simbolo,
-        posicion: idxSimbolo,
-        mensaje: "El simbolo evaluado no tiene una transicion hacia un estado valido",
-        estado: estados.at(-1)
-      };
-      console.error("Consulta los errores");
-      manejoErrores.push(error);
-    }
-    
-    return secuenciaEstados;
+
+    return aceptada;
   }
+
+  // const generaSecuenciaEstados = (simbolo, idxSimbolo, estados, automata) => {
+  //   let secuenciaEstados = [];
+  //   let secuenciaEstadosEpsilon = [];
+  //   let normales = false;
+  //   let epsilon = false;
+  //   estados.map(estadoActual => {
+  //     automata.estados[estadoActual].transiciones.map( t => {
+  //       if(t.alfabeto.includes(simbolo)){
+  //         secuenciaEstados.push(t.estadoDestino);
+  //         console.log("q"+estadoActual+"("+simbolo+")->",t.estadoDestino);
+          
+  //       }else if(t.alfabeto.includes("E")){
+  //         secuenciaEstadosEpsilon.push(t.estadoDestino);
+  //         esEpsilon = true;
+  //         console.log("q"+estadoActual+"("+simbolo+") EPSILON->",t.estadoDestino);
+          
+  //       }
+  //     })
+      
+  //   })
+    
+  //   if(secuenciaEstados.length === 0 && secuenciaEstadosEpsilon === 0){
+  //     let i = estados.length -1;
+  //     let error = {
+  //       simbolo:simbolo,
+  //       posicion: idxSimbolo,
+  //       mensaje: "El simbolo evaluado no tiene una transicion hacia un estado valido",
+  //       estado: JSON.stringify(estados)
+  //     };
+  //     console.error("Consulta los errores");
+  //     manejoErrores.push(error);
+  //   }
+  //  if(secuenciaEstados.length > 0){
+  //   esEpsilon = false;
+  //   return secuenciaEstados;
+  //  }
+  //  else{
+  //   esEpsilon = true;
+  //   return secuenciaEstadosEpsilon;
+  //  }
+    
+   
+   
+    
+  // }
   const mostrarOcultarListaAFNRender = ()=>{
     setVerAFnsRender(!verAFNsRender)
     setMostrarTabla(false)
