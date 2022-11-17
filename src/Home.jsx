@@ -19,6 +19,11 @@ export const Home = () => {
   const [afnSeleccionado, setAfnSeleccionado] = useState(-1);
   const [secuencia, setSecuencia] = useState("");
   const [me, setMe] = useState(false);
+  const [epsilon, setEpsilon] = useState([]);
+  const [alfa, setAlfa] = useState([]);
+
+  let estadosEpsilon = [];
+  let estadosAlfa = [];
 
   let manejoErrores = [];
   useEffect(() => {
@@ -69,7 +74,7 @@ export const Home = () => {
     )
   }
   const cerraduraEpsilon = (estado, automata) => {
-    console.log("Calculando transiciones epsilon de ", estado)
+    // console.log("Calculando transiciones epsilon de ", estado)
     let conjuntoEstadosEpsilon = [];
     let pilaEstadosPendientes = [];
     if(typeof(estado) == "number"){
@@ -81,34 +86,47 @@ export const Home = () => {
     
     let v;
     let estadosTemporales = [];
+    let estadosOrigen = [];
+    let estadosDestino = [];
     while(pilaEstadosPendientes.length !== 0){
       v = pilaEstadosPendientes.shift();
       estadosTemporales = [];
       conjuntoEstadosEpsilon.push(v);
       automata.estados[v].transiciones.forEach(t => {
-        if(t.alfabeto.includes("E"))
+        if(t.alfabeto.includes("E")){
           if(!conjuntoEstadosEpsilon.includes(t.estadoDestino)){
             pilaEstadosPendientes.push(t.estadoDestino);        
             estadosTemporales.push(t.estadoDestino);
           }
-            
+        }
       });
-      if(estadosTemporales.length >0)
-        console.log("q"+v+"(E)--->{"+estadosTemporales+"}")  
+      estadosOrigen.push(v);
+      estadosDestino.push(estadosTemporales);
+      if(estadosTemporales.length >0){
+        // console.log("q"+v+"(E)--->{"+estadosTemporales+"}")  
+        // console.log("Origen",estadosOrigen," - destino", estadosDestino)
+      }
       // else
         // console.log("q"+v+"(E)---> {}")
     }
+    // let temp = [];
+    // temp.push(estadosOrigen);
+    // temp.push(estadosDestino);
+    // estadosEpsilon.push(temp);
     conjuntoEstadosEpsilon = conjuntoEstadosEpsilon.sort(function(a, b){return a-b});
+    console.log("Cerradura EPSILON DE "+estado+": "+conjuntoEstadosEpsilon)
     return conjuntoEstadosEpsilon;
     
   }
 
   const mover = (estado, simbolo, automata ) =>{
     let conjuntoDestino = [];
+    let eDestino = [];
+    let conjuntoOrigen = [];
     if(typeof(estado) == "number"){
       conjuntoDestino = automata.estados[estado].transiciones.map(t =>{
         if(t.alfabeto.includes(simbolo)){
-          console.log("q"+estado+"("+simbolo+")->{"+ t.estadoDestino+"}")
+          // console.log("q"+estado+"("+simbolo+")->{"+ t.estadoDestino+"}")
           return t.estadoDestino;
         } 
       })
@@ -117,16 +135,29 @@ export const Home = () => {
       estado.map(e => {
         automata.estados[e].transiciones.map(t =>{
           if(t.alfabeto.includes(simbolo)){
-            console.log("q"+e+"("+simbolo+")->{"+ t.estadoDestino+"}")
+            // console.log("q"+e+"("+simbolo+")->{"+ t.estadoDestino+"}")
               conjuntoDestino.push(t.estadoDestino);
+              conjuntoOrigen.push(e);
+              // eDestino.push(e);
           } 
           else{
+            
+            // conjuntoOrigen.push(e);
+            // conjuntoDestino.push([]);
             // console.log("q"+e+"("+simbolo+")->{}")
           }
         })
       })
     }
-    console.log("De los estados, los que tienen transicion con "+simbolo+" son ", conjuntoDestino)
+    // let temp = [];
+    // temp.push(conjuntoOrigen, conjuntoDestino);
+    // estadosAlfa.push(temp);
+    // conjuntoOrigen.map((o, idx) => {
+    //   console.log(o);
+    // })
+    console.log(""+conjuntoOrigen);
+    console.log(""+conjuntoDestino);
+    
     return conjuntoDestino;
     // console.log("El conjunto destino de ", estado, "con ",simbolo, "es ", conjuntoDestino )
   }
@@ -148,19 +179,26 @@ export const Home = () => {
     let automata = afns[idx];
     let conjuntoA = [];
     conjuntoA = cerraduraEpsilon(automata.estadoInicial, automata);
-    console.log("Se inicia desde el conjunto  de estados EPSILON: ", conjuntoA);
+    // console.log("Se inicia desde el conjunto  de estados EPSILON: ", conjuntoA);
 
     for(let i = 0; i<cadena.length; i++){
       let caracter = cadena[i];
       console.log("Analizando el caracter "+caracter)
       conjuntoA = IrA(conjuntoA, caracter, automata);
-      console.log(conjuntoA)
+      // console.log(conjuntoA)
       
     }
 
     esAceptacion = compruebaEstadosAceptacion(conjuntoA, automata);
 
-    esAceptacion ? console.log("CADENA ACEPTADA") : console.log("CADENA RECHAZADA")
+    // setAlfa([...estadosAlfa]);
+    // setEpsilon([...estadosEpsilon]);
+
+    // console.log(estadosEpsilon);
+
+    // console.log(estadosAlfa);
+
+    esAceptacion ? console.log("El conjunto final contiene algun estado de los siguientes: "+automata.estadosAceptacion+" por tanto, es CADENA ACEPTADA") :  console.log("El conjunto final no contiene algun estado de los siguientes: "+automata.estadosAceptacion+" por tanto, es CADENA RECHAZADA")
   }
   
   const compruebaEstadosAceptacion = (estados, automata) =>{
@@ -284,6 +322,16 @@ export const Home = () => {
         </div>
 
       }
+       <div>
+          {
+            epsilon.map((e,idx) =>{
+              return (<>
+              <div>{JSON.stringify(e[0])}</div>
+              <div>{JSON.stringify(e[1])}</div>
+              </>)
+            })
+          }
+        </div>
       {
          mostrarTabla && <div>
           <div className="test">
@@ -296,6 +344,7 @@ export const Home = () => {
             <div><VistaAFNs automatas={afns} idx={afnSeleccionado}/></div>
           </div>
       }
+     
     </main>
   )
 }
